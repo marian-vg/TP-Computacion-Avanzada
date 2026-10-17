@@ -6,6 +6,38 @@ Sistema modular en Bash para la supervisión y auditoría en tiempo real de recu
 
 ---
 
+## ⚡ Guía Rápida de Inicio (Quick Start)
+
+### 1. Instalar herramientas necesarias (Debian Server / Zorin OS / Ubuntu)
+En una terminal con permisos de superusuario, instalar todas las dependencias con un solo comando:
+```bash
+sudo apt update && sudo apt install -y curl procps iproute2 tar gzip stress-ng
+```
+
+### 2. Dar permisos y configurar credenciales
+```bash
+# Otorgar permisos de ejecución a todos los scripts
+chmod +x monitor.sh test_stress.sh modulos/*.sh
+
+# Crear archivo de configuración a partir de la plantilla
+cp .env.example .env
+```
+> Editá `.env` (`nano .env`) y colocá tu `RESEND_API_KEY` y `ALERT_EMAIL`.
+
+### 3. Comandos esenciales (Machete de ejecución)
+
+| Qué querés hacer | Comando a ejecutar |
+| :--- | :--- |
+| **Monitorear en vivo (Tiempo Real)** | `watch -n 2 ./monitor.sh` |
+| **Test rápido de alertas por correo** | `./monitor.sh --cpu 1` |
+| **Personalizar umbrales al vuelo** | `./monitor.sh --cpu 70 --ram 80 --disk 85` |
+| **Personalizar tamaño de rotación de logs** | `./monitor.sh --max-log-size 20` |
+| **Lanzar menú interactivo de estrés (Demo)** | `./test_stress.sh` |
+| **Ejecución única (para cron)** | `./monitor.sh` |
+| **Ver ayuda completa de opciones** | `./monitor.sh --help` |
+
+---
+
 ## 🚀 Arquitectura y Recursos Supervisados
 
 El sistema implementa una arquitectura modular donde [`monitor.sh`](monitor.sh) actúa como orquestador central y delega la captura en módulos especializados dentro de [`modulos/`](modulos/):
@@ -30,62 +62,6 @@ El sistema implementa una arquitectura modular donde [`monitor.sh`](monitor.sh) 
 
 ---
 
-## 🛠️ Instalación y Configuración
-
-### 1. Clonar el repositorio y dar permisos de ejecución
-```bash
-git clone <URL_DEL_REPOSITORIO>
-cd TP-Computacion-Avanzada
-chmod +x monitor.sh modulos/*.sh
-```
-
-### 2. Configurar credenciales para alertas (Resend)
-Copiar la plantilla de entorno:
-```bash
-cp .env.example .env
-```
-Editar `.env` con un editor de texto (`nano .env`):
-```env
-RESEND_API_KEY="re_tu_api_key_aqui"
-ALERT_EMAIL="tu_correo@dominio.com"
-ALERT_FROM="Alertas Debian <onboarding@resend.dev>"
-```
-
----
-
-## 💻 Modos de Uso
-
-### A. Ejecución individual (One-Shot / Tarea Cron)
-Ejecuta una medición única, actualiza el log y finaliza:
-```bash
-./monitor.sh
-```
-
-### B. Personalización de Umbrales por Banderas (CLI)
-Podés sobrescribir los umbrales de [`config.sh`](config.sh) directamente desde la línea de comandos:
-```bash
-./monitor.sh --cpu 75 --ram 80 --disk 85 --max-log-size 20
-```
-
-* Parámetros disponibles:
-  * `--cpu <%>`: Umbral de alerta de CPU.
-  * `--ram <%>`: Umbral de alerta de RAM.
-  * `--disk <%>`: Umbral de alerta de Disco.
-  * `--max-log-size <MB>`: Límite de tamaño del archivo `monitor.log` antes de comprimirlo en `.tar.gz`.
-  * `-h, --help`: Muestra la ayuda de sintaxis.
-
-### C. Monitoreo en Tiempo Real (Consola interactiva)
-Aprovechando la utilidad nativa `watch` (Clase 3, diapositiva 20):
-```bash
-watch -n 2 ./monitor.sh
-```
-* O con umbrales personalizados:
-```bash
-watch -n 2 ./monitor.sh --cpu 60 --ram 70
-```
-
----
-
 ## ⏰ Programación de Tareas con Cron
 
 Para cumplir con la consigna de programar la ejecución en Debian Server:
@@ -101,29 +77,21 @@ Para cumplir con la consigna de programar la ejecución en Debian Server:
 
 ---
 
-## 🔥 Demostración y Pruebas de Estrés (`test_stress.sh`)
+## 🔥 Demostración y Pruebas en Vivo (`test_stress.sh`)
 
 Para realizar la defensa en vivo ante la cátedra y verificar el disparo de alertas y notificaciones a Resend:
 
-1. **Instalar `stress-ng` en Debian Server / Zorin OS:**
+1. **Terminal 1:** Mantener el monitor en tiempo real:
    ```bash
-   sudo apt update && sudo apt install -y stress-ng
+   watch -n 2 ./monitor.sh
+   ```
+2. **Terminal 2:** Abrir el menú interactivo de estrés:
+   ```bash
+   ./test_stress.sh
    ```
 
-2. **Ejecutar la demostración en dos terminales en paralelo:**
-   * **Terminal 1:** Mantener el monitor en tiempo real:
-     ```bash
-     watch -n 2 ./monitor.sh
-     ```
-   * **Terminal 2:** Abrir el menú interactivo de estrés:
-     ```bash
-     chmod +x test_stress.sh
-     ./test_stress.sh
-     ```
-
-   * El menú te permite:
-     * Estresar CPU a un porcentaje exacto (ej. 85%) con `--cpu-load`.
-     * Estresar RAM consumiendo un porcentaje calculado de la memoria total.
-     * Estresar el subsistema de Disco con escrituras intensivas.
-     * Lanzar un estrés combinado multirecurso con tiempo límite seguro (`--timeout`) para evitar que la máquina virtual se cuelgue.
-
+   El menú interactivo te permite:
+   * Estresar CPU a un porcentaje exacto (ej. 85%) con `--cpu-load`.
+   * Estresar RAM consumiendo un porcentaje calculado de la memoria total.
+   * Estresar el subsistema de Disco con escrituras intensivas.
+   * Lanzar un estrés combinado multirecurso con tiempo límite seguro (`--timeout`) para evitar que la máquina virtual se cuelgue.
