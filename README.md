@@ -28,7 +28,9 @@ cp .env.example .env
 
 | Qué querés hacer | Comando a ejecutar |
 | :--- | :--- |
-| **Monitorear en vivo (Tiempo Real)** | `watch -n 2 ./monitor.sh` |
+| **Panel interactivo navegable (Teclas 1-5, q)** | `./monitor.sh -i` |
+| **Ver recurso aislado con detalle extendido** | `./monitor.sh --only cpu` *(o `ram`, `disk`, `net`)* |
+| **Monitorear en vivo con watch** | `watch -n 2 ./monitor.sh` |
 | **Test rápido de alertas por correo** | `./monitor.sh --cpu 1` |
 | **Personalizar umbrales al vuelo** | `./monitor.sh --cpu 70 --ram 80 --disk 85` |
 | **Personalizar tamaño de rotación de logs** | `./monitor.sh --max-log-size 20` |

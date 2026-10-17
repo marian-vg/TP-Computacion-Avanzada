@@ -56,3 +56,37 @@ obtener_estado_red() {
 
     echo "Interfaz: ${iface} (${ip_addr}) | Velocidad: ↓ ${rx_speed} ↑ ${tx_speed} | Total: RX ${total_rx} TX ${total_tx}"
 }
+
+# Devuelve vista ampliada detallada de red (puertos en escucha y sockets activos)
+obtener_detalle_red() {
+    echo "--- DETALLE EXTENDIDO DE RED Y CONECTIVIDAD ---"
+
+    local iface=""
+    if command -v ip >/dev/null 2>&1; then
+        iface=$(ip route 2>/dev/null | grep '^default' | awk '{print $5}' | head -n 1)
+        echo "Interfaces detectadas (ip -brief addr):"
+        LC_ALL=C ip -brief addr 2>/dev/null | sed 's/^/  /'
+    fi
+
+    # Puertos y servicios en escucha (ss o netstat)
+    echo -e "\nPuertos abiertos en escucha (Listening Sockets):"
+    if command -v ss >/dev/null 2>&1; then
+        LC_ALL=C ss -tuln 2>/dev/null | head -n 8 | sed 's/^/  /'
+    elif command -v netstat >/dev/null 2>&1; then
+        LC_ALL=C netstat -tuln 2>/dev/null | head -n 8 | sed 's/^/  /'
+    else
+        echo "  ss / netstat no disponible en este entorno."
+    fi
+
+    # Paquetes con error o descartados de /proc/net/dev
+    if [ -n "$iface" ] && [ -f "/proc/net/dev" ]; then
+        local err_rx drop_rx err_tx drop_tx
+        err_rx=$(awk -v iface="$iface:" '$1 == iface {print $3}' /proc/net/dev)
+        drop_rx=$(awk -v iface="$iface:" '$1 == iface {print $4}' /proc/net/dev)
+        err_tx=$(awk -v iface="$iface:" '$1 == iface {print $11}' /proc/net/dev)
+        drop_tx=$(awk -v iface="$iface:" '$1 == iface {print $12}' /proc/net/dev)
+        echo -e "\nEstadísticas de errores/descartes (${iface}):"
+        echo "  RX Errores: ${err_rx:-0} | RX Descartados: ${drop_rx:-0}"
+        echo "  TX Errores: ${err_tx:-0} | TX Descartados: ${drop_tx:-0}"
+    fi
+}

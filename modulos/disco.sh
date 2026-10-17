@@ -69,3 +69,32 @@ gestionar_limpieza_logs() {
         find "$dir_logs" -name "backup_monitor_*.tar.gz" -mtime +7 -delete 2>/dev/null
     fi
 }
+
+# Devuelve vista ampliada detallada de almacenamiento (Clase 4: df completo, du de logs, Clase 5: tar.gz)
+obtener_detalle_disco() {
+    echo "--- DETALLE EXTENDIDO DE ALMACENAMIENTO Y LOGS ---"
+    
+    # 1. Particiones y sistemas de archivos montados (Clase 4, diapositiva 21)
+    if command -v df >/dev/null 2>&1; then
+        echo "Particiones montadas (df -h):"
+        LC_ALL=C df -h 2>/dev/null | head -n 10 | sed 's/^/  /'
+    fi
+
+    # 2. Archivo de log activo y respaldos (Clase 4 du, Clase 5 tar.gz)
+    local archivo_log="${LOG_FILE:-logs/monitor.log}"
+    local dir_logs
+    dir_logs=$(dirname "$archivo_log")
+
+    echo -e "\nEstado del subsistema de logs:"
+    if [ -f "$archivo_log" ] && command -v du >/dev/null 2>&1; then
+        local tamano_legible
+        tamano_legible=$(LC_ALL=C du -h "$archivo_log" 2>/dev/null | awk '{print $1}')
+        echo "  Archivo activo (${archivo_log}): ${tamano_legible} (Límite rotación: ${LOG_MAX_SIZE_MB:-50} MB)"
+    fi
+
+    local cant_backups=0
+    if [ -d "$dir_logs" ]; then
+        cant_backups=$(find "$dir_logs" -maxdepth 1 -name "backup_monitor_*.tar.gz" 2>/dev/null | wc -l)
+    fi
+    echo "  Respaldos comprimidos (.tar.gz): ${cant_backups} archivos históricos"
+}
