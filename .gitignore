@@ -1,0 +1,12 @@
+# Variables de entorno y credenciales (Resend API, Telegram)
+.env
+
+# Archivos de logs rotados y temporales
+logs/*.tar.gz
+/tmp/monitor_*
+
+# Archivos de sistema operativo / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
