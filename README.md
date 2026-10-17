@@ -98,3 +98,32 @@ Para cumplir con la consigna de programar la ejecución en Debian Server:
    ```cron
    */5 * * * * /ruta/absoluta/TP-Computacion-Avanzada/monitor.sh >/dev/null 2>&1
    ```
+
+---
+
+## 🔥 Demostración y Pruebas de Estrés (`test_stress.sh`)
+
+Para realizar la defensa en vivo ante la cátedra y verificar el disparo de alertas y notificaciones a Resend:
+
+1. **Instalar `stress-ng` en Debian Server / Zorin OS:**
+   ```bash
+   sudo apt update && sudo apt install -y stress-ng
+   ```
+
+2. **Ejecutar la demostración en dos terminales en paralelo:**
+   * **Terminal 1:** Mantener el monitor en tiempo real:
+     ```bash
+     watch -n 2 ./monitor.sh
+     ```
+   * **Terminal 2:** Abrir el menú interactivo de estrés:
+     ```bash
+     chmod +x test_stress.sh
+     ./test_stress.sh
+     ```
+
+   * El menú te permite:
+     * Estresar CPU a un porcentaje exacto (ej. 85%) con `--cpu-load`.
+     * Estresar RAM consumiendo un porcentaje calculado de la memoria total.
+     * Estresar el subsistema de Disco con escrituras intensivas.
+     * Lanzar un estrés combinado multirecurso con tiempo límite seguro (`--timeout`) para evitar que la máquina virtual se cuelgue.
+
