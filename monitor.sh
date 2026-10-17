@@ -30,12 +30,14 @@ Opciones de umbrales:
   --cpu <porcentaje>         Umbral de alerta para CPU (defecto: ${CPU_THRESHOLD}%)
   --ram <porcentaje>         Umbral de alerta para RAM (defecto: ${RAM_THRESHOLD}%)
   --disk <porcentaje>        Umbral de alerta para Disco raíz (defecto: ${DISK_THRESHOLD}%)
+  --cooldown <minutos>       Tiempo de enfriamiento para alertas en minutos (defecto: ${ALERT_COOLDOWN_MINUTES} min)
   --max-log-size <megabytes> Tamaño máximo del log antes de rotar y comprimir con tar+gzip (defecto: ${LOG_MAX_SIZE_MB} MB)
   -h, --help                 Muestra esta ayuda y finaliza
 
 Ejemplos:
   $0                         # Ejecución única (ideal para cron)
   $0 -i                      # Panel interactivo en tiempo real
+  $0 --cooldown 1            # Alertas con cooldown de 1 minuto
   $0 --only cpu              # Vista aislada de CPU con Top 5 procesos
   watch -n 2 "$0 --only ram" # Monitoreo en vivo de RAM con watch
 EOF
@@ -63,6 +65,14 @@ while [[ $# -gt 0 ]]; do
         --disk)
             DISK_THRESHOLD="$2"
             shift 2
+            ;;
+        --cooldown|--cooldown-minutes)
+            ALERT_COOLDOWN_MINUTES="$2"
+            shift 2
+            ;;
+        --cooldown=*|--cooldown-minutes=*)
+            ALERT_COOLDOWN_MINUTES="${1#*=}"
+            shift
             ;;
         --max-log-size|--log-size)
             LOG_MAX_SIZE_MB="$2"

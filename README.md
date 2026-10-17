@@ -33,6 +33,7 @@ cp .env.example .env
 | **Monitorear en vivo con watch** | `watch -n 2 ./monitor.sh` |
 | **Test rápido de alertas por correo** | `./monitor.sh --cpu 1` |
 | **Personalizar umbrales al vuelo** | `./monitor.sh --cpu 70 --ram 80 --disk 85` |
+| **Personalizar cooldown de alertas (en min)** | `./monitor.sh --cooldown 1` |
 | **Personalizar tamaño de rotación de logs** | `./monitor.sh --max-log-size 20` |
 | **Lanzar menú interactivo de estrés (Demo)** | `./test_stress.sh` |
 | **Ejecución única (para cron)** | `./monitor.sh` |
