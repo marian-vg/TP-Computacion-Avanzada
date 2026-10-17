@@ -25,5 +25,12 @@ LOG_MAX_SIZE_MB="${LOG_MAX_SIZE_MB:-50}"
 # Tiempo de enfriamiento (cooldown) para alertas externas en minutos
 ALERT_COOLDOWN_MINUTES="${ALERT_COOLDOWN_MINUTES:-5}"
 
-# Ruta del archivo de cooldown en Linux
-COOLDOWN_FILE="/tmp/monitor_resend_cooldown"
+# Ruta del archivo de cooldown en Linux (compartido entre Resend y Telegram)
+COOLDOWN_FILE="/tmp/monitor_alert_cooldown"
+
+# Credenciales externas (cargadas desde .env)
+RESEND_API_KEY="${RESEND_API_KEY:-}"
+ALERT_EMAIL="${ALERT_EMAIL:-}"
+ALERT_FROM="${ALERT_FROM:-Alertas Debian <onboarding@resend.dev>}"
+TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
+TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# modulos/alertas.sh - Evaluación de umbrales y despacho de alertas visuales y vía Resend
+# modulos/alertas.sh - Evaluación de umbrales y despacho de alertas visuales, Resend y Telegram
 
 # Verifica si está activo el tiempo de enfriamiento (cooldown)
 # Retorna 0 si SE PUEDE enviar alerta, 1 si está en cooldown (silenciado)
 verificar_cooldown() {
     local cooldown_segundos=$(( ${ALERT_COOLDOWN_MINUTES:-5} * 60 ))
-    local cooldown_archivo="${COOLDOWN_FILE:-/tmp/monitor_resend_cooldown}"
+    local cooldown_archivo="${COOLDOWN_FILE:-/tmp/monitor_alert_cooldown}"
     local ahora
     ahora=$(date +%s)
 
@@ -25,7 +25,7 @@ verificar_cooldown() {
 
 # Actualiza la marca de tiempo del último envío exitoso
 actualizar_cooldown() {
-    local cooldown_archivo="${COOLDOWN_FILE:-/tmp/monitor_resend_cooldown}"
+    local cooldown_archivo="${COOLDOWN_FILE:-/tmp/monitor_alert_cooldown}"
     date +%s > "$cooldown_archivo" 2>/dev/null
 }
 
@@ -67,11 +67,44 @@ enviar_alerta_resend() {
     http_code=$(echo "$respuesta" | tail -n 1)
 
     if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
-        actualizar_cooldown
-        echo "[ALERTA ENVIADA] Notificación enviada exitosamente a ${ALERT_EMAIL} vía Resend."
+        echo "[ALERTA ENVIADA] Notificación de correo enviada exitosamente a ${ALERT_EMAIL} vía Resend."
         return 0
     else
         echo "[ERROR RESEND] Falló el envío de correo. Código HTTP: ${http_code}."
+        return 1
+    fi
+}
+
+# Despacha mensaje instantáneo mediante la API oficial de Telegram Bot vía cURL
+enviar_alerta_telegram() {
+    local mensaje_html="$1"
+
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        echo "[INFO ALERTA] Credenciales de Telegram no configuradas en .env (se omite mensaje de bot)."
+        return 0
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "[ERROR ALERTA] curl no está instalado en el sistema."
+        return 1
+    fi
+
+    local url="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+
+    local respuesta
+    respuesta=$(curl -s -w "\n%{http_code}" -X POST "$url" \
+        -d "chat_id=${TELEGRAM_CHAT_ID}" \
+        -d "parse_mode=HTML" \
+        --data-urlencode "text=${mensaje_html}" 2>/dev/null)
+
+    local http_code
+    http_code=$(echo "$respuesta" | tail -n 1)
+
+    if [ "$http_code" = "200" ]; then
+        echo "[ALERTA ENVIADA] Notificación enviada exitosamente al canal de Telegram."
+        return 0
+    else
+        echo "[ERROR TELEGRAM] Falló el envío a Telegram. Código HTTP: ${http_code}."
         return 1
     fi
 }
@@ -227,12 +260,36 @@ procesar_alertas() {
     echo "$mensaje_alerta"
     echo "[${fecha_hora}] ${mensaje_alerta}" >> "$LOG_FILE"
 
-    # Evaluación de Cooldown y despacho de correo
+    # Evaluación de Cooldown y despacho de alertas externas
     if verificar_cooldown; then
+        local hostname_servidor
+        hostname_servidor=$(hostname 2>/dev/null || echo "debian-server")
+
+        # 1. Despacho a Resend (Email)
         local asunto="Alerta del Servidor Debian: [${resumen_asunto}]"
         local cuerpo_html
         cuerpo_html=$(generar_plantilla_html "$fecha_hora" "$resumen_detalle" "$uso_cpu" "$cpu_pct" "$uso_ram" "$ram_pct" "$uso_disco" "$disk_pct" "$estado_red")
         enviar_alerta_resend "$asunto" "$cuerpo_html"
+
+        # 2. Despacho a Telegram Bot
+        local mensaje_telegram
+        mensaje_telegram="🚨 <b>ALERTA DEL SERVIDOR DEBIAN</b>
+<b>Host:</b> <code>${hostname_servidor}</code>
+<b>Fecha:</b> ${fecha_hora}
+
+⚠️ <b>Recursos Críticos:</b>
+${resumen_detalle}
+
+📊 <b>Detalle del Sistema:</b>
+• <b>CPU:</b> ${uso_cpu} (Umbral: ${CPU_THRESHOLD}%)
+• <b>RAM:</b> ${uso_ram} (Umbral: ${RAM_THRESHOLD}%)
+• <b>Disco (/):</b> ${uso_disco} (Umbral: ${DISK_THRESHOLD}%)
+• <b>Red:</b> ${estado_red}"
+
+        enviar_alerta_telegram "$mensaje_telegram"
+
+        # Actualiza el cooldown para no spamear ni email ni telegram
+        actualizar_cooldown
     else
         echo "[COOLDOWN ACTIVO] Alerta externa silenciada temporalmente para evitar saturación."
     fi
