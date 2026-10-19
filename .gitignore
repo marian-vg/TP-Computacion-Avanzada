@@ -10,3 +10,6 @@ logs/*.tar.gz
 Thumbs.db
 .vscode/
 .idea/
+
+# Apuntes temporales de estudio
+APUNTES_ESTUDIO.md

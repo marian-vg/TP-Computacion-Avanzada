@@ -31,7 +31,7 @@ cp .env.example .env
 #### Monitoreo en tiempo real (para operadores humanos)
 | Qué desea hacer | Comando a ejecutar | Descripción breve |
 | :--- | :--- | :--- |
-| **Panel interactivo (Recomendado)** | `./monitor.sh -i` | Dashboard continuo. Permite navegar con teclas `1` a `5` y salir con `q`. |
+| **Panel interactivo (Recomendado)** | `./monitor.sh -i` | Dashboard continuo. Navega con teclas `1` a `5`, configura umbrales con `u` y sale con `q`. |
 | **Monitoreo con utilidad estándar watch** | `watch -n 2 ./monitor.sh` | Actualiza la vista general cada 2 segundos en modo solo lectura. |
 | **Ver solo un recurso con detalle** | `./monitor.sh --only cpu` | Muestra el estado del recurso y su vista extendida (`cpu`, `ram`, `disk`, `net`). |
 
@@ -111,7 +111,7 @@ Se recomienda utilizar el **Modo Interactivo**:
 ```bash
 ./monitor.sh -i
 ```
-* **Ventajas:** Permite cambiar de vista al instante con las teclas numéricas (`1` para General, `2` para CPU con Top 5 procesos, `3` para RAM, `4` para Disco, `5` para Red) y salir con `q`.
+* **Ventajas:** Permite cambiar de vista al instante con las teclas numéricas (`1` para General, `2` para CPU con Top 5 procesos, `3` para RAM, `4` para Disco, `5` para Red), ajustar umbrales en caliente con `u` y salir con `q`.
 * **Alternativa con `watch`:** Si se desea emplear la herramienta estándar vista en Clase 3, ejecute `watch -n 2 ./monitor.sh`. Tenga en cuenta que `watch` es de solo lectura y no admite interacción por teclado.
 
 ### Paso 2: Terminal 2 (Generador de Estrés)

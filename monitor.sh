@@ -22,7 +22,7 @@ Script modular de monitoreo de recursos del sistema para Debian GNU/Linux.
 Compatible con ejecución desatendida (cron), por banderas y modo interactivo.
 
 Opciones de ejecución:
-  -i, --interactive          Abre el panel interactivo navegable en consola con teclas de acceso rápido
+  -i, --interactive          Abre el panel interactivo navegable en consola con teclas de acceso rápido (1-5, u, q)
   -o, --only <recurso>       Muestra únicamente un recurso específico y su detalle ampliado
                              Recursos válidos: cpu | ram | disk | net
 
@@ -195,6 +195,100 @@ generar_reporte_aislado() {
     echo "======================================================================"
 }
 
+# Menú interactivo de configuración de umbrales en memoria
+configurar_umbrales_interactivo() {
+    while true; do
+        clear
+        echo "======================================================================"
+        echo "           CONFIGURACIÓN DINÁMICA DE UMBRALES (EN MEMORIA)"
+        echo "======================================================================"
+        echo "  (1) Umbral de CPU     : ${CPU_THRESHOLD}%"
+        echo "  (2) Umbral de RAM     : ${RAM_THRESHOLD}%"
+        echo "  (3) Umbral de Disco   : ${DISK_THRESHOLD}%"
+        echo "  (4) Cooldown alertas  : ${ALERT_COOLDOWN_MINUTES} min"
+        echo "  (5) Configurar todos los recursos (CPU, RAM, Disco)"
+        echo "  (v) Volver al monitor"
+        echo "======================================================================"
+        read -r -p "Seleccioná una opción [1-5, v]: " opt_cfg
+
+        case "$opt_cfg" in
+            1)
+                read -r -p "Nuevo umbral de CPU (1-100) [actual: ${CPU_THRESHOLD}]: " nuevo_cpu
+                if [ -n "$nuevo_cpu" ]; then
+                    if [[ "$nuevo_cpu" =~ ^[0-9]+$ ]] && [ "$nuevo_cpu" -ge 1 ] && [ "$nuevo_cpu" -le 100 ]; then
+                        CPU_THRESHOLD="$nuevo_cpu"
+                        echo "Umbral de CPU actualizado a ${CPU_THRESHOLD}%."
+                        sleep 1
+                    else
+                        echo "Valor inválido. Debe ser un número entero entre 1 y 100."
+                        sleep 1.5
+                    fi
+                fi
+                ;;
+            2)
+                read -r -p "Nuevo umbral de RAM (1-100) [actual: ${RAM_THRESHOLD}]: " nuevo_ram
+                if [ -n "$nuevo_ram" ]; then
+                    if [[ "$nuevo_ram" =~ ^[0-9]+$ ]] && [ "$nuevo_ram" -ge 1 ] && [ "$nuevo_ram" -le 100 ]; then
+                        RAM_THRESHOLD="$nuevo_ram"
+                        echo "Umbral de RAM actualizado a ${RAM_THRESHOLD}%."
+                        sleep 1
+                    else
+                        echo "Valor inválido. Debe ser un número entero entre 1 y 100."
+                        sleep 1.5
+                    fi
+                fi
+                ;;
+            3)
+                read -r -p "Nuevo umbral de Disco (1-100) [actual: ${DISK_THRESHOLD}]: " nuevo_disco
+                if [ -n "$nuevo_disco" ]; then
+                    if [[ "$nuevo_disco" =~ ^[0-9]+$ ]] && [ "$nuevo_disco" -ge 1 ] && [ "$nuevo_disco" -le 100 ]; then
+                        DISK_THRESHOLD="$nuevo_disco"
+                        echo "Umbral de Disco actualizado a ${DISK_THRESHOLD}%."
+                        sleep 1
+                    else
+                        echo "Valor inválido. Debe ser un número entero entre 1 y 100."
+                        sleep 1.5
+                    fi
+                fi
+                ;;
+            4)
+                read -r -p "Nuevo cooldown en minutos (>=1) [actual: ${ALERT_COOLDOWN_MINUTES}]: " nuevo_cd
+                if [ -n "$nuevo_cd" ]; then
+                    if [[ "$nuevo_cd" =~ ^[0-9]+$ ]] && [ "$nuevo_cd" -ge 1 ]; then
+                        ALERT_COOLDOWN_MINUTES="$nuevo_cd"
+                        echo "Cooldown actualizado a ${ALERT_COOLDOWN_MINUTES} minutos."
+                        sleep 1
+                    else
+                        echo "Valor inválido. Debe ser un número entero mayor o igual a 1."
+                        sleep 1.5
+                    fi
+                fi
+                ;;
+            5)
+                # Configurar exclusivamente los umbrales de recursos (CPU, RAM, Disco)
+                read -r -p "Nuevo umbral de CPU (1-100) [actual: ${CPU_THRESHOLD}]: " n_cpu
+                [[ "$n_cpu" =~ ^[0-9]+$ ]] && [ "$n_cpu" -ge 1 ] && [ "$n_cpu" -le 100 ] && CPU_THRESHOLD="$n_cpu"
+
+                read -r -p "Nuevo umbral de RAM (1-100) [actual: ${RAM_THRESHOLD}]: " n_ram
+                [[ "$n_ram" =~ ^[0-9]+$ ]] && [ "$n_ram" -ge 1 ] && [ "$n_ram" -le 100 ] && RAM_THRESHOLD="$n_ram"
+
+                read -r -p "Nuevo umbral de Disco (1-100) [actual: ${DISK_THRESHOLD}]: " n_disco
+                [[ "$n_disco" =~ ^[0-9]+$ ]] && [ "$n_disco" -ge 1 ] && [ "$n_disco" -le 100 ] && DISK_THRESHOLD="$n_disco"
+
+                echo "Umbrales de recursos actualizados: CPU=${CPU_THRESHOLD}%, RAM=${RAM_THRESHOLD}%, Disco=${DISK_THRESHOLD}%."
+                sleep 1.5
+                ;;
+            v|V|"")
+                break
+                ;;
+            *)
+                echo "Opción no válida."
+                sleep 1
+                ;;
+        esac
+    done
+}
+
 # Bucle interactivo navegable sin romper comandos
 ejecutar_modo_interactivo() {
     local vista_actual="general"
@@ -222,7 +316,7 @@ ejecutar_modo_interactivo() {
         clear
         echo "$salida"
 
-        echo -e "\n[Atajos] (1) General | (2) CPU | (3) RAM | (4) Disco | (5) Red | (q/ENTER) Volver/Salir"
+        echo -e "\n[Atajos] (1) General | (2) CPU | (3) RAM | (4) Disco | (5) Red | (u) Umbrales | (q/ENTER) Volver/Salir"
         
         # Espera de 2 segundos sin bloquear para permitir navegación inmediata
         local tecla=""
@@ -234,6 +328,9 @@ ejecutar_modo_interactivo() {
             3) vista_actual="ram" ;;
             4) vista_actual="disk" ;;
             5) vista_actual="net" ;;
+            u|U)
+                configurar_umbrales_interactivo
+                ;;
             q|Q|b|B)
                 if [ "$vista_actual" != "general" ]; then
                     vista_actual="general"
