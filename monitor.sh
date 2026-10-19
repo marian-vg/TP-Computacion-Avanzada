@@ -1,4 +1,3 @@
-cat << 'EOF_SCRIPT' > monitor.sh
 #!/usr/bin/env bash
 # monitor.sh - Script principal de monitoreo del servidor Debian GNU/Linux
 # Cátedra: Computación Avanzada - FCyT UADER
@@ -258,5 +257,3 @@ elif [ -n "$MODO_SOLO" ]; then
 else
     generar_reporte_general
 fi
-EOF_SCRIPT
-chmod +x monitor.sh
