@@ -1,3 +1,4 @@
+cat << 'EOF_SCRIPT' > monitor.sh
 #!/usr/bin/env bash
 # monitor.sh - Script principal de monitoreo del servidor Debian GNU/Linux
 # Cátedra: Computación Avanzada - FCyT UADER
@@ -200,7 +201,7 @@ ejecutar_modo_interactivo() {
     local vista_actual="general"
 
     while true; do
-        clear
+        salida=$(
         case "$vista_actual" in
             general)
                 generar_reporte_general
@@ -218,6 +219,9 @@ ejecutar_modo_interactivo() {
                 generar_reporte_aislado "net"
                 ;;
         esac
+        )
+        clear
+        echo "$salida"
 
         echo -e "\n[Atajos] (1) General | (2) CPU | (3) RAM | (4) Disco | (5) Red | (q/ENTER) Volver/Salir"
         
@@ -254,3 +258,5 @@ elif [ -n "$MODO_SOLO" ]; then
 else
     generar_reporte_general
 fi
+EOF_SCRIPT
+chmod +x monitor.sh
